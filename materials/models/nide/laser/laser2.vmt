@@ -1,0 +1,6 @@
+"vertexlitgeneric"
+{
+	"$basetexture" "zombieden/xmode/youmu/laser/laser2"
+	"$translucent" 1
+	"$nocull" 1
+}
