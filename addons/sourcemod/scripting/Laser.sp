@@ -305,10 +305,11 @@ stock int CreateProp(const char[] name, bool dieOnCollision)
 
 public Action Hook_PropHit(int originEntity, int targetEntity)
 {
-    if(IsValidClient(targetEntity) && IsPlayerAlive(targetEntity))
+    if (IsValidClient(targetEntity) && IsPlayerAlive(targetEntity))
     {
         SDKHooks_TakeDamage(targetEntity, targetEntity, targetEntity, laserDamage);
     }
+    return Plugin_Continue;
 }
 
 stock int CreateTrackTrain(const char[] name, const char[] firstpath, int speed)
