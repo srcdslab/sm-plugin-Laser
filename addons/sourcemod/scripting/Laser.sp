@@ -22,6 +22,7 @@
 
 #define LASER_HEIGHT            30
 
+#define LASER_KILL_TIMER        2.5
 #define LASER_REPEAT_TIMER      2.0
 
 #define LASER_ENABLE_DMG        true
@@ -44,13 +45,14 @@ enum LaserMode
 
 bool repeat = false;
 float laserDamage = LASER_DAMAGE;
+Handle g_RepeatLaserTimer = null;
 
 public Plugin myinfo =
 {
 	name        = "Laser",
-	author      = "maxime1907",
+	author      = "maxime1907, .Rushaway",
 	description = "Throws a laser in front of someone",
-	version     = "1.0",
+	version     = "1.2",
 	url         = "https://steamcommunity.com/id/maxime1907"
 }
 
@@ -88,9 +90,16 @@ public void OnMapStart()
     AddFileToDownloadsTable("materials/models/nide/laser/white.vtf");
 }
 
+public void OnMapEnd()
+{
+	g_RepeatLaserTimer = null;
+}
+
 public Action Command_LaserKill(int client, int args)
 {
+    delete g_RepeatLaserTimer;
     KillLaser(LASER, LASER_TRACK_START, LASER_TRACK_END, LASER_TRAIN);
+    CPrintToChat(client, "{green}[Laser] {white}Active laser has been killed.");
     return Plugin_Handled;
 }
 
@@ -126,7 +135,7 @@ public Action Command_Laser(int client, int args)
             repeat = false;
         else
         {
-            if((iTargetCount = ProcessTargetString(argTarget, client, iTargets, MAXPLAYERS, COMMAND_FILTER_ALIVE, sTargetName, sizeof(sTargetName), bIsML)) <= 0)
+            if((iTargetCount = ProcessTargetString(argTarget, client, iTargets, MAXPLAYERS, COMMAND_FILTER_ALIVE | COMMAND_FILTER_NO_IMMUNITY, sTargetName, sizeof(sTargetName), bIsML)) <= 0)
             {
                 ReplyToTargetError(client, iTargetCount);
                 return Plugin_Handled;
@@ -256,11 +265,12 @@ void ThrowLaser(int client, float distanceStart, float distanceEnd, float speed,
     if (mode == LINEAR_RANDOM_REPEAT && !repeat)
     {
         repeat = true;
-        CreateTimer(LASER_REPEAT_TIMER, Timer_ThrowLaser, GetClientSerial(client), TIMER_REPEAT);
+        g_RepeatLaserTimer = CreateTimer(LASER_REPEAT_TIMER, Timer_ThrowLaser, GetClientSerial(client), TIMER_REPEAT);
     }
     else if (mode != LINEAR_RANDOM_REPEAT)
     {
         repeat = false;
+        CreateTimer(LASER_KILL_TIMER, Timer_KillLaser, GetClientSerial(client), TIMER_FLAG_NO_MAPCHANGE);
     }
 }
 
@@ -273,6 +283,17 @@ public Action Timer_ThrowLaser(Handle timer, int serial)
         KillLaser(LASER, LASER_TRACK_START, LASER_TRACK_END, LASER_TRAIN);
         ThrowLaser(client, LASER_DISTANCE_START, LASER_DISTANCE_END, LASER_SPEED, LINEAR_RANDOM_REPEAT);
         return Plugin_Continue;
+    }
+    return Plugin_Stop;
+}
+
+public Action Timer_KillLaser(Handle timer, int serial)
+{
+    int client = GetClientFromSerial(serial);
+    if(!IsValidClient(client) || GetClientTeam(client) <= CS_TEAM_NONE) return Plugin_Stop;
+    if (!repeat)
+    {
+        KillLaser(LASER, LASER_TRACK_START, LASER_TRACK_END, LASER_TRAIN);
     }
     return Plugin_Stop;
 }
@@ -290,6 +311,8 @@ stock int CreateProp(const char[] name, bool dieOnCollision)
     DispatchKeyValue(ent, "targetname", name);
     DispatchKeyValue(ent, "solid", "0");
     DispatchKeyValue(ent, "model", PROP_MODEL);
+    DispatchKeyValue(ent, "disableshadows", "1");
+    DispatchKeyValue(ent, "disablereceiveshadows", "1");
     DispatchSpawn(ent);
 
     if (dieOnCollision)
