@@ -52,7 +52,7 @@ public Plugin myinfo =
 	name        = "Laser",
 	author      = "maxime1907, .Rushaway",
 	description = "Throws a laser in front of someone",
-	version     = "1.2",
+	version     = "1.2.1",
 	url         = "https://steamcommunity.com/id/maxime1907"
 }
 
@@ -426,3 +426,4 @@ stock bool IsValidClient(int client, bool isABotAValidClient = true)
     }
     return IsClientInGame(client);
 }
+
