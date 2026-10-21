@@ -52,7 +52,7 @@ public Plugin myinfo =
 	name        = "Laser",
 	author      = "maxime1907, .Rushaway",
 	description = "Throws a laser in front of someone",
-	version     = "1.2.1",
+	version     = "1.2.2",
 	url         = "https://steamcommunity.com/id/maxime1907"
 }
 
@@ -64,7 +64,7 @@ public void OnPluginStart()
     HookEvent("round_end", OnRoundEnd, EventHookMode_Post);
 }
 
-public void OnRoundEnd(Handle event, const char[] name, bool dontBroadcast)
+public void OnRoundEnd(Event event, const char[] name, bool dontBroadcast)
 {
     repeat = false;
 }
