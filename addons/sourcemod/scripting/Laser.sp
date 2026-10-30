@@ -52,7 +52,7 @@ public Plugin myinfo =
 	name        = "Laser",
 	author      = "maxime1907, .Rushaway",
 	description = "Throws a laser in front of someone",
-	version     = "1.2.2",
+	version     = "1.3.0",
 	url         = "https://steamcommunity.com/id/maxime1907"
 }
 
@@ -244,8 +244,12 @@ void ThrowLaser(int client, float distanceStart, float distanceEnd, float speed,
     for (int i = sizeof(g_vecTracks) - 1; i >= 0; i--)
     {
         FormatEx(trackname, sizeof(trackname), "%s%i", LASER_TRACK, i);
-        CreatePath(trackname, g_vecTracks[i], prevtrackname);
+        int track = CreatePath(trackname, g_vecTracks[i], prevtrackname);
         strcopy(prevtrackname, sizeof(prevtrackname), trackname);
+
+        // Kill the laser as soon as it reaches the last path_track (the OnFullyOpen of a func_movelinear)
+        if (i == sizeof(g_vecTracks) - 1 && track > 0)
+            HookSingleEntityOutput(track, "OnPass", Output_OnLaserPathEnd, true);
     }
 
     int velocity = RoundToZero(speed);
@@ -296,6 +300,11 @@ public Action Timer_KillLaser(Handle timer, int serial)
         KillLaser(LASER, LASER_TRACK_START, LASER_TRACK_END, LASER_TRAIN);
     }
     return Plugin_Stop;
+}
+
+public void Output_OnLaserPathEnd(const char[] output, int caller, int activator, float delay)
+{
+    KillLaser(LASER, LASER_TRACK_START, LASER_TRACK_END, LASER_TRAIN);
 }
 
 stock int CreateProp(const char[] name, bool dieOnCollision)
