@@ -1,0 +1,43 @@
+"Phrases"
+{
+	"Laser Killed"
+	{
+		"en"		"Active laser has been killed."
+		"fr"		"Le laser actif a été supprimé."
+		"ru"		"Активный лазер уничтожен."
+		"es"		"El láser activo ha sido eliminado."
+		"de"		"Der aktive Laser wurde entfernt."
+		"pt"		"O laser ativo foi removido."
+		"chi"		"已移除当前激光。"
+	}
+	"Laser Usage"
+	{
+		"en"		"Usage: sm_throwlaser <#userid|name> <0|1|2|3|-1> <damage>"
+		"fr"		"Utilisation : sm_throwlaser <#userid|name> <0|1|2|3|-1> <damage>"
+		"ru"		"Использование: sm_throwlaser <#userid|name> <0|1|2|3|-1> <damage>"
+		"es"		"Uso: sm_throwlaser <#userid|name> <0|1|2|3|-1> <damage>"
+		"de"		"Verwendung: sm_throwlaser <#userid|name> <0|1|2|3|-1> <damage>"
+		"pt"		"Uso: sm_throwlaser <#userid|name> <0|1|2|3|-1> <damage>"
+		"chi"		"用法：sm_throwlaser <#userid|name> <0|1|2|3|-1> <damage>"
+	}
+	"Laser Modes 1"
+	{
+		"en"		"0 = Aim {red}|{white} 1 = Linear {red}|{white} 2 = Linear random"
+		"fr"		"0 = Visée {red}|{white} 1 = Linéaire {red}|{white} 2 = Linéaire aléatoire"
+		"ru"		"0 = Прицел {red}|{white} 1 = Линейный {red}|{white} 2 = Линейный случайный"
+		"es"		"0 = Apuntado {red}|{white} 1 = Lineal {red}|{white} 2 = Lineal aleatorio"
+		"de"		"0 = Zielen {red}|{white} 1 = Linear {red}|{white} 2 = Linear zufällig"
+		"pt"		"0 = Mira {red}|{white} 1 = Linear {red}|{white} 2 = Linear aleatório"
+		"chi"		"0 = 瞄准 {red}|{white} 1 = 直线 {red}|{white} 2 = 随机直线"
+	}
+	"Laser Modes 2"
+	{
+		"en"		"3 = Linear random repeat {red}|{white} -1 = Stop repeating"
+		"fr"		"3 = Linéaire aléatoire en boucle {red}|{white} -1 = Arrêter la répétition"
+		"ru"		"3 = Линейный случайный с повтором {red}|{white} -1 = Остановить повтор"
+		"es"		"3 = Lineal aleatorio repetido {red}|{white} -1 = Detener la repetición"
+		"de"		"3 = Linear zufällig wiederholt {red}|{white} -1 = Wiederholung stoppen"
+		"pt"		"3 = Linear aleatório repetido {red}|{white} -1 = Parar a repetição"
+		"chi"		"3 = 随机直线循环 {red}|{white} -1 = 停止循环"
+	}
+}
