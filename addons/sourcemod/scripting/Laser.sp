@@ -52,7 +52,7 @@ public Plugin myinfo =
 	name        = "Laser",
 	author      = "maxime1907, .Rushaway",
 	description = "Throws a laser in front of someone",
-	version     = "1.2.3",
+	version     = "1.2.4",
 	url         = "https://steamcommunity.com/id/maxime1907"
 }
 
@@ -100,7 +100,7 @@ public Action Command_LaserKill(int client, int args)
 {
     delete g_RepeatLaserTimer;
     KillLaser(LASER, LASER_TRACK_START, LASER_TRACK_END, LASER_TRAIN);
-    CPrintToChat(client, "{green}[Laser] {white}%t", "Laser Killed");
+    CReplyToCommand(client, "{green}[Laser] {white}%t", "Laser Killed");
     return Plugin_Handled;
 }
 
@@ -278,13 +278,14 @@ void ThrowLaser(int client, float distanceStart, float distanceEnd, float speed,
 public Action Timer_ThrowLaser(Handle timer, int serial)
 {
     int client = GetClientFromSerial(serial);
-    if(!IsValidClient(client) || GetClientTeam(client) <= CS_TEAM_NONE) return Plugin_Stop;
-    if (repeat)
+    if (repeat && IsValidClient(client) && GetClientTeam(client) > CS_TEAM_NONE)
     {
         KillLaser(LASER, LASER_TRACK_START, LASER_TRACK_END, LASER_TRAIN);
         ThrowLaser(client, LASER_DISTANCE_START, LASER_DISTANCE_END, LASER_SPEED, LINEAR_RANDOM_REPEAT);
         return Plugin_Continue;
     }
+    if (timer == g_RepeatLaserTimer)
+        g_RepeatLaserTimer = null;
     return Plugin_Stop;
 }
 
