@@ -59,6 +59,7 @@ public Plugin myinfo =
 public void OnPluginStart()
 {
     LoadTranslations("common.phrases");
+    LoadTranslations("Laser.phrases");
     RegAdminCmd("sm_throwlaser", Command_Laser, ADMFLAG_ROOT, "Sends a laser in front of you");
     RegAdminCmd("sm_throwlaser_kill", Command_LaserKill, ADMFLAG_ROOT, "Kills the active laser");
     HookEvent("round_end", OnRoundEnd, EventHookMode_Post);
@@ -99,7 +100,7 @@ public Action Command_LaserKill(int client, int args)
 {
     delete g_RepeatLaserTimer;
     KillLaser(LASER, LASER_TRACK_START, LASER_TRACK_END, LASER_TRAIN);
-    CPrintToChat(client, "{green}[Laser] {white}Active laser has been killed.");
+    CPrintToChat(client, "{green}[Laser] {white}%t", "Laser Killed");
     return Plugin_Handled;
 }
 
@@ -149,9 +150,9 @@ public Action Command_Laser(int client, int args)
     }
     else
     {
-        CPrintToChat(client, "{green}[Laser] {white}Usage: sm_throwlaser <#userid|name> <0|1|2|3|-1> <damage>");
-        CPrintToChat(client, "{green}[Laser] {white}0 = Aim {red}|{white} 1 = Linear {red}|{white} 2 = Linear random");
-        CPrintToChat(client, "{green}[Laser] {white}3 = Linear random repeat {red}|{white} -1 = Stop repeating");
+        CPrintToChat(client, "{green}[Laser] {white}%t", "Laser Usage");
+        CPrintToChat(client, "{green}[Laser] {white}%t", "Laser Modes 1");
+        CPrintToChat(client, "{green}[Laser] {white}%t", "Laser Modes 2");
     }
     return Plugin_Handled;
 }
