@@ -47,12 +47,16 @@ bool repeat = false;
 float laserDamage = LASER_DAMAGE;
 Handle g_RepeatLaserTimer = null;
 
+// Each throw adds its own id to its targetnames, so several lasers can exist at the same time
+int g_iLastLaserId = 0;
+int g_iRepeatLaserId = -1;
+
 public Plugin myinfo =
 {
 	name        = "Laser",
 	author      = "maxime1907, .Rushaway",
 	description = "Throws a laser in front of someone",
-	version     = "1.3.1",
+	version     = "1.3.2",
 	url         = "https://steamcommunity.com/id/maxime1907"
 }
 
@@ -99,7 +103,7 @@ public void OnMapEnd()
 public Action Command_LaserKill(int client, int args)
 {
     delete g_RepeatLaserTimer;
-    KillLaser(LASER, LASER_TRACK_START, LASER_TRACK_END, LASER_TRAIN);
+    KillAllLasers();
     CReplyToCommand(client, "{green}[Laser] {white}%t", "Laser Killed");
     return Plugin_Handled;
 }
@@ -108,8 +112,8 @@ public Action Command_Laser(int client, int args)
 {
     if(!IsValidClient(client, false)) return Plugin_Handled;
 
-    // Remove previous laser
-    KillLaser(LASER, LASER_TRACK_START, LASER_TRACK_END, LASER_TRAIN);
+    // Remove previous lasers
+    KillAllLasers();
 
     LaserMode mode = AIM;
     if (args >= 2)
@@ -157,33 +161,54 @@ public Action Command_Laser(int client, int args)
     return Plugin_Handled;
 }
 
-void KillLaser(const char[] laserName, const char[] trackStart, const char[] trackEnd, const char[] trainName)
+// Targetname of one entity of a laser: "<base>_<id>", e.g. "_throwinglaser_maxime1907_track0_12"
+void FormatLaserName(char[] buffer, int maxlength, const char[] base, int id)
 {
-    int laser = FindEntityByTargetName(laserName);
-    if (laser != INVALID_ENT_REFERENCE && AcceptEntityInput(laser, "Kill"))
-    {
-        laser = INVALID_ENT_REFERENCE;
-    }
-    int track0 = FindEntityByTargetName(trackStart);
-    if (track0 != INVALID_ENT_REFERENCE && AcceptEntityInput(track0, "Kill"))
-    {
-        track0 = INVALID_ENT_REFERENCE;
-    }
-    int track1 = FindEntityByTargetName(trackEnd);
-    if (track1 != INVALID_ENT_REFERENCE && AcceptEntityInput(track1, "Kill"))
-    {
-        track1 = INVALID_ENT_REFERENCE;
-    }
-    int train = FindEntityByTargetName(trainName);
-    if (train != INVALID_ENT_REFERENCE && AcceptEntityInput(train, "Kill"))
-    {
-        train = INVALID_ENT_REFERENCE;
-    }
+    FormatEx(buffer, maxlength, "%s_%d", base, id);
 }
 
-void ThrowLaser(int client, float distanceStart, float distanceEnd, float speed, LaserMode mode)
+void KillEntityByTargetName(const char[] base, int id)
 {
-    if(!IsValidClient(client) || GetClientTeam(client) <= CS_TEAM_NONE) return;
+    char name[64];
+    FormatLaserName(name, sizeof(name), base, id);
+
+    int entity = FindEntityByTargetName(name);
+    if (entity != INVALID_ENT_REFERENCE)
+        AcceptEntityInput(entity, "Kill");
+}
+
+// Kills the prop, the train and the path tracks of one laser
+void KillLaser(int id)
+{
+    if (id < 0) return;
+
+    KillEntityByTargetName(LASER, id);
+    KillEntityByTargetName(LASER_TRACK_START, id);
+    KillEntityByTargetName(LASER_TRACK_END, id);
+    KillEntityByTargetName(LASER_TRAIN, id);
+}
+
+// Kills every laser: all their targetnames start with LASER
+void KillAllLasers()
+{
+    char sTargetname[64];
+    int prefixLength = strlen(LASER);
+    int iEntity = INVALID_ENT_REFERENCE;
+    while((iEntity = FindEntityByClassname(iEntity, "*")) != INVALID_ENT_REFERENCE)
+    {
+        GetEntPropString(iEntity, Prop_Data, "m_iName", sTargetname, sizeof(sTargetname));
+        if (strncmp(sTargetname, LASER, prefixLength, false) == 0)
+            AcceptEntityInput(iEntity, "Kill");
+    }
+    g_iRepeatLaserId = -1;
+}
+
+// Returns the id of the thrown laser, or -1 if none was thrown
+int ThrowLaser(int client, float distanceStart, float distanceEnd, float speed, LaserMode mode)
+{
+    if(!IsValidClient(client) || GetClientTeam(client) <= CS_TEAM_NONE) return -1;
+
+    int id = ++g_iLastLaserId;
 
     float vecEyeAngles[3];
     float vecEyeOrigin[3];
@@ -244,7 +269,7 @@ void ThrowLaser(int client, float distanceStart, float distanceEnd, float speed,
 
     for (int i = sizeof(g_vecTracks) - 1; i >= 0; i--)
     {
-        FormatEx(trackname, sizeof(trackname), "%s%i", LASER_TRACK, i);
+        FormatEx(trackname, sizeof(trackname), "%s%i_%d", LASER_TRACK, i, id);
         int track = CreatePath(trackname, g_vecTracks[i], prevtrackname);
         strcopy(prevtrackname, sizeof(prevtrackname), trackname);
 
@@ -255,12 +280,23 @@ void ThrowLaser(int client, float distanceStart, float distanceEnd, float speed,
 
     int velocity = RoundToZero(speed);
 
+    char trainname[64];
+    char trackstart[64];
+    char lasername[64];
+    FormatLaserName(trainname, sizeof(trainname), LASER_TRAIN, id);
+    FormatLaserName(trackstart, sizeof(trackstart), LASER_TRACK_START, id);
+    FormatLaserName(lasername, sizeof(lasername), LASER, id);
+
     // Create func_tracktrain
-    int tracktrain = CreateTrackTrain(LASER_TRAIN, LASER_TRACK_START, velocity);
+    int tracktrain = CreateTrackTrain(trainname, trackstart, velocity);
 
-    int laser = CreateProp(LASER, LASER_ENABLE_DMG);
+    int laser = CreateProp(lasername, LASER_ENABLE_DMG);
 
-    if (laser < 0 || tracktrain < 0) return;
+    if (laser < 0 || tracktrain < 0)
+    {
+        KillLaser(id);
+        return -1;
+    }
 
     // Parent it to func_tracktrain
     ParentToEntity(laser, tracktrain);
@@ -270,13 +306,16 @@ void ThrowLaser(int client, float distanceStart, float distanceEnd, float speed,
     if (mode == LINEAR_RANDOM_REPEAT && !repeat)
     {
         repeat = true;
+        g_iRepeatLaserId = id;
         g_RepeatLaserTimer = CreateTimer(LASER_REPEAT_TIMER, Timer_ThrowLaser, GetClientSerial(client), TIMER_REPEAT);
     }
     else if (mode != LINEAR_RANDOM_REPEAT)
     {
         repeat = false;
-        CreateTimer(LASER_KILL_TIMER, Timer_KillLaser, GetClientSerial(client), TIMER_FLAG_NO_MAPCHANGE);
+        CreateTimer(LASER_KILL_TIMER, Timer_KillLaser, id, TIMER_FLAG_NO_MAPCHANGE);
     }
+
+    return id;
 }
 
 public Action Timer_ThrowLaser(Handle timer, int serial)
@@ -284,8 +323,8 @@ public Action Timer_ThrowLaser(Handle timer, int serial)
     int client = GetClientFromSerial(serial);
     if (repeat && IsValidClient(client) && GetClientTeam(client) > CS_TEAM_NONE)
     {
-        KillLaser(LASER, LASER_TRACK_START, LASER_TRACK_END, LASER_TRAIN);
-        ThrowLaser(client, LASER_DISTANCE_START, LASER_DISTANCE_END, LASER_SPEED, LINEAR_RANDOM_REPEAT);
+        KillLaser(g_iRepeatLaserId);
+        g_iRepeatLaserId = ThrowLaser(client, LASER_DISTANCE_START, LASER_DISTANCE_END, LASER_SPEED, LINEAR_RANDOM_REPEAT);
         return Plugin_Continue;
     }
     if (timer == g_RepeatLaserTimer)
@@ -293,20 +332,21 @@ public Action Timer_ThrowLaser(Handle timer, int serial)
     return Plugin_Stop;
 }
 
-public Action Timer_KillLaser(Handle timer, int serial)
+public Action Timer_KillLaser(Handle timer, int id)
 {
-    int client = GetClientFromSerial(serial);
-    if(!IsValidClient(client) || GetClientTeam(client) <= CS_TEAM_NONE) return Plugin_Stop;
-    if (!repeat)
-    {
-        KillLaser(LASER, LASER_TRACK_START, LASER_TRACK_END, LASER_TRAIN);
-    }
+    KillLaser(id);
     return Plugin_Stop;
 }
 
 public void Output_OnLaserPathEnd(const char[] output, int caller, int activator, float delay)
 {
-    KillLaser(LASER, LASER_TRACK_START, LASER_TRACK_END, LASER_TRAIN);
+    // The last path_track is named "<LASER_TRACK_END>_<id>"
+    char sTargetname[64];
+    GetEntPropString(caller, Prop_Data, "m_iName", sTargetname, sizeof(sTargetname));
+
+    int separator = FindCharInString(sTargetname, '_', true);
+    if (separator != -1)
+        KillLaser(StringToInt(sTargetname[separator + 1]));
 }
 
 stock int CreateProp(const char[] name, bool dieOnCollision)
