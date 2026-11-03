@@ -250,7 +250,7 @@ This plugin demonstrates a sophisticated entity management pattern:
 1. **Creation**: Multiple related entities (prop, tracktrain, path_tracks)
 2. **Linking**: Entities connected via targetnames and parenting
 3. **Animation**: Movement controlled by Source engine's track system  
-4. **Cleanup**: Coordinated destruction of all related entities
+4. **Cleanup**: Coordinated destruction of all related entities as soon as the train reaches the last path_track (`OnPass` output hook), with a timer as fallback
 
 ### Performance Patterns
 - **Entity Caching**: Find entities by targetname rather than repeated searches
