@@ -227,7 +227,7 @@ Handle g_RepeatLaserTimer = null;
 - Kill entities with proper AcceptEntityInput calls: `AcceptEntityInput(entity, "Kill")`
 
 ### Entity Management
-- Use meaningful targetnames for entity organization (e.g., `_throwinglaser_maxime1907`)
+- Use meaningful targetnames for entity organization (e.g., `_throwinglaser_maxime1907`), with a per-throw id suffix (`_throwinglaser_maxime1907_track0_12`) so several lasers can exist at the same time
 - Parent entities properly for synchronized movement: `SetVariantEntity()` + `AcceptEntityInput(ent, "SetParent")`
 - Set appropriate spawn flags and properties for entity behavior
 - Always validate entity creation return values before use
