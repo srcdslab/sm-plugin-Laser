@@ -56,7 +56,7 @@ public Plugin myinfo =
 	name        = "Laser",
 	author      = "maxime1907, .Rushaway",
 	description = "Throws a laser in front of someone",
-	version     = "1.3.2",
+	version     = "1.3.3",
 	url         = "https://steamcommunity.com/id/maxime1907"
 }
 
